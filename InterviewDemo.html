@@ -1,0 +1,226 @@
+﻿<html>
+<head>
+    <title>國家目錄</title>
+
+    <link rel="stylesheet" href="https://kendo.cdn.telerik.com/2017.3.913/styles/kendo.common.min.css" />
+    <link rel="stylesheet" href="https://kendo.cdn.telerik.com/2017.3.913/styles/kendo.default.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="http://kendo.cdn.telerik.com/2021.2.511/js/kendo.all.min.js"></script>
+
+    <style type="text/css">
+    </style>
+
+    <script>
+        var GridData;
+
+        $(document).ready(function () {
+            $("#Search_textbox").kendoTextBox({
+                placeholder: "國名",
+                label: {
+                    floating: true
+                }
+            });
+
+            $("#btnSearch").on("click", GetData);
+        });
+
+        function GetData() {
+            var Name = $("#Search_textbox").val();
+            if (Name != '') {
+                var URL = "https://restcountries.eu/rest/v2/name/" + Name;
+                $.get(URL, function (data, status) {
+                    debugger
+                    GridData = data;
+                    SearchResultbindGrid(data);
+                }).fail(function (message) {
+                    alert("載入資料失敗,原因：" + message);
+                });
+            }
+            else {
+                alert("請輸入國名!");
+            }
+        }
+
+        function SearchResultbindGrid(_data) {
+            debugger
+            var element = $("#GridM").kendoGrid({
+                dataSource: {
+                    data: _data,
+                    pageSize: 25,
+                },
+                pageable: {
+                    refresh: true,
+                    pageSizes: true,
+                    buttonCount: 5,
+                    page: 1,
+                    pageSize: 25
+                },
+                height: 600,
+                sortable: true,
+                pageable: true,
+                detailInit: detailInit,
+                columns: [
+                     {
+                         field: "",
+                         title: "國旗",
+                         template: "<img style='width: 90px;' src='#: flag #'>",
+                     },
+                    {
+                        field: "name",
+                        title: "國家名稱",
+                    },
+                    {
+                        field: "alpha2Code",
+                        title: "2位國家代碼"
+                    },
+                    {
+                        field: "alpha3Code",
+                        title: "3位國家代碼"
+                    },
+                    {
+                        field: "nativeName",
+                        title: "母語名稱"
+                    },
+                    {
+                        field: "",
+                        title: "替代國家名稱",
+                        template: function (e) {
+                            return e.altSpellings.join();
+                        }
+                    },
+                    {
+                        field: "",
+                        title: "國際電話區號",
+                        template: function (e) {
+                            return e.callingCodes.join();
+                        }
+                    }
+                ],
+                editable: false
+            });
+        }
+
+        function detailInit(e) {
+            debugger
+            var Name = e.data.name;
+            data = getItemdata(e.data.name).done(function (_data) {
+                debugger
+                var ItemData = [];
+                ItemData.push(_data);
+                $("<div/>").appendTo(e.detailCell).kendoGrid({
+                    dataSource: {
+                        data: ItemData
+                    },
+                    scrollable: true,
+                    sortable: false,
+                    pageable: false,
+                    columns: [
+                        {
+                            field: "", title: "topLevelDomain",
+                            template: function (e) {
+                                debugger
+                                return e.topLevelDomain.join();
+                            }
+                        },
+                        { field: "capital", title: "capital" },
+                        { field: "region", title: "region" },
+                        { field: "subregion", title: "subregion" },
+                        { field: "population", title: "population" },
+                        {
+                            field: "", title: "latlng",
+                            template: function (e) {
+                                debugger
+                                return e.latlng.join();
+                            }
+                        },
+                        { field: "demonym", title: "demonym" },
+                        { field: "area", title: "area" },
+                        { field: "gini", title: "gini" },
+                        {
+                            field: "", title: "timezones",
+                            template: function (e) {
+                                debugger
+                                return e.timezones.join();
+                            }
+                        },
+                        {
+                            field: "", title: "borders",
+                            template: function (e) {
+                                debugger
+                                return e.borders.join();
+                            }
+                        },
+                        { field: "numericCode", title: "numericCode" },
+                        {
+                            field: "", title: "currencies",
+                            template: function (e) {
+                                debugger
+                                return e.currencies.join();
+                            }
+                        },
+                        {
+                            field: "", title: "languages",
+                            template: function (e) {
+                                debugger
+                                return e.languages.join();
+                            }
+                        },
+                        {
+                            field: "", title: "translations",
+                            template: function (e) {
+                                debugger
+                                return  JSON.stringify(e.translations).replaceAll("\"", "'");
+                            }
+                        },
+                        {
+                            field: "", title: "regionalBlocs",
+                            template: function (e) {
+                                debugger
+                                return JSON.stringify(e.regionalBlocs).replaceAll("\"", "'")
+                            }
+                        },
+                        { field: "cioc", title: "cioc" }
+                    ],
+                    editable: false
+                });
+            })
+            .fail(function (data) {
+                alert("載入資料失敗,原因：" + message);
+            });
+
+        }
+
+        function getItemdata(Name) {
+            debugger
+            var deferred = $.Deferred();
+
+            $.each(GridData, function (i, v) {
+                if (v.name == Name) {
+                    deferred.resolve(v);
+                    return false; // stops the loop
+                }
+            });
+            return deferred.promise();
+        }
+
+    </script>
+</head>
+<body>
+    <div class="panel panel-default">
+        <div class="panel-heading">
+
+            <div class="row">
+                <div class="col-md-12">
+                    <input id="Search_textbox">
+                    <button id="btnSearch" class="" style="">Search</button>
+                </div>
+            </div>
+            <br />
+            <br />
+            <div class="row">
+                <div id="GridM"></div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
